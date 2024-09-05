@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   try {
     console.log("apiUrl== ", apiUrl);
     const response = await fetch(apiUrl);
-    console.log("response== ", response);
+    // console.log("response== ", response);
     const data = await response.json();
     console.log("data== ", data);
     return NextResponse.json(data);

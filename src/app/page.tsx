@@ -3,7 +3,8 @@
 import Head from 'next/head';
 import * as React from 'react';
 import '@/lib/env';
-import toast from 'react-hot-toast'; // 请确保已安装react-hot-toast
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 import ArrowLink from '@/components/links/ArrowLink';
 import ButtonLink from '@/components/links/ButtonLink';
@@ -25,7 +26,7 @@ import Logo from '~/svg/Logo.svg';
 
 export default function HomePage() {
   const [inputValue, setInputValue] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
 
   function isValidYoutubeUrl(url: string): boolean {
     const youtubeRegex =
@@ -33,36 +34,15 @@ export default function HomePage() {
     return youtubeRegex.test(url);
   }
 
-  async function handleExport(
-    event: React.MouseEvent<HTMLButtonElement>,
-  ): Promise<void> {
+  function handleExport(event: React.MouseEvent<HTMLButtonElement>): void {
     if (!isValidYoutubeUrl(inputValue)) {
       toast.error('Please input a correct YouTube URL');
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const apiUrl = `/api/proxy?url=${encodeURIComponent(inputValue)}`;
-      console.log('apiUrl== ', apiUrl);
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error('Request failed');
-      }
-      const data = await response.json();
-      let previewUrl = '';
-      if (data && data.url) {
-        previewUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(data.url)}`;
-      }
-
-      console.log('previewUrl== ', previewUrl);
-      toast.success('Export successful');
-    } catch (error) {
-      console.error('Export failed:', error);
-      toast.error('Export failed, please try again later');
-    } finally {
-      setIsLoading(false);
-    }
+    const sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const searchParams = new URLSearchParams({ url: inputValue });
+    router.push(`/p/${sessionId}?${searchParams.toString()}`);
   }
 
   return (
@@ -82,10 +62,10 @@ export default function HomePage() {
 
           <button
             className='w-full max-w-md p-2 bg-red-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
-            disabled={!inputValue || isLoading}
+            disabled={!inputValue}
             onClick={handleExport}
           >
-            {isLoading ? 'Exporting...' : 'Start Export'}
+            Start Export
           </button>
 
           <footer className='absolute bottom-2 text-gray-700'>
