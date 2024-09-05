@@ -3,6 +3,7 @@
 import Head from 'next/head';
 import * as React from 'react';
 import '@/lib/env';
+import toast from 'react-hot-toast'; // 请确保已安装react-hot-toast
 
 import ArrowLink from '@/components/links/ArrowLink';
 import ButtonLink from '@/components/links/ButtonLink';
@@ -23,41 +24,69 @@ import Logo from '~/svg/Logo.svg';
 // to customize the default configuration.
 
 export default function HomePage() {
+  const [inputValue, setInputValue] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  function isValidYoutubeUrl(url: string): boolean {
+    const youtubeRegex =
+      /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+    return youtubeRegex.test(url);
+  }
+
+  async function handleExport(
+    event: React.MouseEvent<HTMLButtonElement>,
+  ): Promise<void> {
+    if (!isValidYoutubeUrl(inputValue)) {
+      toast.error('Please input a correct YouTube URL');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const apiUrl = `/api/proxy?url=${encodeURIComponent(inputValue)}`;
+      console.log('apiUrl== ', apiUrl);
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+      const data = await response.json();
+      let previewUrl = '';
+      if (data && data.url) {
+        previewUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(data.url)}`;
+      }
+
+      console.log('previewUrl== ', previewUrl);
+      toast.success('Export successful');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Export failed, please try again later');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <main>
       <Head>
-        <title>Hi</title>
+        <title>YouTube Comments Export</title>
       </Head>
       <section className='bg-white'>
         <div className='layout relative flex min-h-screen flex-col items-center justify-center py-12 text-center'>
-          <Logo className='w-16' />
-          <h1 className='mt-4'>Next.js + Tailwind CSS + TypeScript Starter</h1>
-          <p className='mt-2 text-sm text-gray-800'>
-            A starter for Next.js, Tailwind CSS, and TypeScript with Absolute
-            Import, Seo, Link component, pre-configured with Husky{' '}
-          </p>
-          <p className='mt-2 text-sm text-gray-700'>
-            <ArrowLink href='https://github.com/theodorusclarence/ts-nextjs-tailwind-starter'>
-              See the repository
-            </ArrowLink>
-          </p>
+          <input
+            type='text'
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder='https://www.youtube.com/watch?v=H_Qzdzd5l_U'
+            className='w-full max-w-md mb-4 p-2 border border-gray-300 rounded'
+          />
 
-          <ButtonLink className='mt-6' href='/components' variant='light'>
-            See all components
-          </ButtonLink>
-
-          <UnstyledLink
-            href='https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2Ftheodorusclarence%2Fts-nextjs-tailwind-starter'
-            className='mt-4'
+          <button
+            className='w-full max-w-md p-2 bg-red-500 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled={!inputValue || isLoading}
+            onClick={handleExport}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              width='92'
-              height='32'
-              src='https://vercel.com/button'
-              alt='Deploy with Vercel'
-            />
-          </UnstyledLink>
+            {isLoading ? 'Exporting...' : 'Start Export'}
+          </button>
 
           <footer className='absolute bottom-2 text-gray-700'>
             © {new Date().getFullYear()} By{' '}
