@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 
 interface ExportData {
   url: string;
@@ -39,6 +40,7 @@ export default function ExportPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
   const url = searchParams.get('url');
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -73,10 +75,21 @@ export default function ExportPage() {
     fetchData();
   }, [url]);
 
-  const handleSaveAs = () => {
+  const handleSaveAsExcel = () => {
     if (exportData?.url) {
       const link = document.createElement('a');
       link.href = exportData.url;
+      link.download = 'youtube_comments.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleSaveAsCSV = () => {
+    if (exportData?.csvUrl) {
+      const link = document.createElement('a');
+      link.href = exportData.csvUrl;
       link.download = 'youtube_comments.xlsx';
       document.body.appendChild(link);
       link.click();
@@ -97,8 +110,25 @@ export default function ExportPage() {
     }
   };
 
+  const handleExportAnother = () => {
+    router.push('/');
+  };
+
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center'>
+    <div className='min-h-screen flex flex-col items-center justify-center relative'>
+      {/* 添加logo */}
+      <div className="absolute top-4 left-52 flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.svg"
+                alt="logo"
+                width={40}
+                height={40}
+              />
+              <span className="ml-2 text-xl font-semibold text-gray-800">YouTube Comments Exporter</span>
+            </Link>
+          </div>
+
       {isLoading ? (
         <p>Exporting...</p>
       ) : error ? (
@@ -125,10 +155,10 @@ export default function ExportPage() {
                 />
               </div>
               <Card className='w-full'>
-                <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <CardHeader className='flex flex-row justify-between space-y-0 pb-2'>
                   <div className='flex space-x-4'>
                     <div className='text-center'>
-                      <div className='text-2xl font-bold'>
+                      <div className='text-lg font-bold'>
                         {exportData.comment_count}
                       </div>
                       <div className='text-sm text-muted-foreground'>Total</div>
@@ -146,7 +176,7 @@ export default function ExportPage() {
                       </div>
                     </div>
                   </div>
-                  <div className='flex items-center space-x-2'>
+                  <div className='flex space-x-2'>
                     <Button
                       variant='outline'
                       size='sm'
@@ -155,7 +185,7 @@ export default function ExportPage() {
                       <ExternalLink className='mr-2 h-4 w-4' />
                       VISIT URL
                     </Button>
-                    <Button variant='outline' size='sm'>
+                    <Button variant='outline' size='sm' className='hidden'>
                       <Send className='mr-2 h-4 w-4' />
                       SEND FEEDBACK
                     </Button>
@@ -165,7 +195,7 @@ export default function ExportPage() {
                   <h2 className='text-2xl font-semibold text-center hidden'>
                     Export completed. Your file is ready for download.
                   </h2>
-                  <div className='bg-green-500 text-white p-4 rounded-md flex items-center justify-center space-x-2'>
+                  <div className='bg-gradient-to-r from-red-400 to-red-500 text-white p-4 rounded-md flex items-center justify-center space-x-2'>
                     <Rocket className='h-5 w-5' />
                     <span>
                       Export completed. Your file is ready for download.
@@ -174,7 +204,7 @@ export default function ExportPage() {
                   <div className='flex justify-center'>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button className='bg-green-500 hover:bg-green-600 text-white text-lg min-w-[200px]  min-h-[40px]'>
+                        <Button className='bg-blue-500  hover:bg-blue-600 text-white text-lg min-w-[200px]  min-h-[40px]'>
                           <Download className='mr-2 h-4 w-4' />
                           Download Excel File
                           <ChevronsUpDown className='ml-2 h-4 w-4' />
@@ -182,7 +212,7 @@ export default function ExportPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className='min-w-[200px]'>
                         <DropdownMenuItem
-                          onClick={handleSaveAs}
+                          onClick={handleSaveAsExcel}
                           className='w-full'
                         >
                           Download Excel File
@@ -194,7 +224,7 @@ export default function ExportPage() {
                           Preview Online
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => console.log('Download CSV File')}
+                          onClick={handleSaveAsCSV}
                           className='w-full'
                         >
                           Download CSV File
@@ -202,7 +232,7 @@ export default function ExportPage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <p className='text-sm text-center text-blue-600 hover:underline cursor-pointer'>
+                  <p className='hidden text-sm text-center text-blue-600 hover:underline cursor-pointer'>
                     Why some comments are not exported?
                   </p>
                 </CardContent>
@@ -232,13 +262,24 @@ export default function ExportPage() {
                   </p>
                   <p className='text-center'>
                     If you can't open provided excel file, open it online using{' '}
-                    <a href='#' className='text-blue-600 hover:underline'>
+                    <a
+                      href='#'
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePreviewOnline();
+                      }}
+                      className='text-blue-600 hover:underline'
+                    >
+                      {' '}
                       Office Web Apps
                     </a>
                     .
                   </p>
                   <div className='flex justify-center w-full'>
-                    <Button className='bg-blue-500 hover:bg-blue-600 text-white'>
+                    <Button 
+                      className='bg-blue-500 hover:bg-blue-600 text-white'
+                      onClick={handleExportAnother}
+                    >
                       EXPORT ANOTHER
                     </Button>
                   </div>

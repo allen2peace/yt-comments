@@ -28,6 +28,9 @@ import { useState } from 'react';
 // Before you begin editing, follow all comments with `STARTERCONF`,
 // to customize the default configuration.
 
+import Image from 'next/image';
+import Link from 'next/link';
+
 export default function HomePage() {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
@@ -62,6 +65,19 @@ export default function HomePage() {
       </Head>
       <section className='bg-white'>
         <div className='layout relative flex min-h-screen flex-col items-center justify-center py-12 text-center'>
+          {/* 修改 logo 部分，添加文本 */}
+          <div className="absolute top-4 left-4 flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.svg"
+                alt="logo"
+                width={40}
+                height={40}
+              />
+              <span className="ml-2 text-xl font-semibold text-gray-800">YouTube Comments Exporter</span>
+            </Link>
+          </div>
+
           <Card className='w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg'>
             <CardContent className='p-8 space-y-6'>
               <div className='text-center'>
@@ -162,8 +178,8 @@ export default function HomePage() {
 
           <footer className='absolute bottom-2 text-gray-700'>
             © {new Date().getFullYear()} By{' '}
-            <UnderlineLink href='https://theodorusclarence.com?ref=tsnextstarter'>
-              Theodorus Clarence
+            <UnderlineLink href=''>
+              Bynan Bell
             </UnderlineLink>
           </footer>
         </div>
