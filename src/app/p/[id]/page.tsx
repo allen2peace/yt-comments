@@ -30,6 +30,7 @@ interface ExportData {
   url: string;
   comment_count: number;
   thumb: string;
+  csvUrl: string;
 }
 
 export default function ExportPage() {
